@@ -1,101 +1,355 @@
-import Image from "next/image";
+"use client";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { 
+ TrendingUp, Target, 
+  CreditCard, Wallet, PiggyBank, BarChart, Settings 
+} from 'lucide-react';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+interface Challenge {
+  id: number;
+  title: string;
+  description: string;
+  reward: number;
+  progress: number;
+  status: 'active' | 'completed' | 'failed';
 }
+
+interface Transaction {
+  id: number;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'expense' | 'income';
+  category: string;
+}
+
+interface User {
+  name: string;
+  age: number;
+  income: number;
+  creditScore: number;
+  savingsGoal: number;
+  currentSavings: number;
+  challenges: Challenge[];
+  transactions: Transaction[];
+}
+
+const initialUser: User = {
+  name: 'Cale Kettner',
+  age: 24,
+  income: 55000,
+  creditScore: 680,
+  savingsGoal: 10000,
+  currentSavings: 3500,
+  challenges: [
+    {
+      id: 1,
+      title: '30-Day No Dining Out Challenge',
+      description: 'Save money by cooking at home',
+      reward: 500,
+      progress: 45,
+      status: 'active'
+    },
+    {
+      id: 2, 
+      title: 'Emergency Fund Boost',
+      description: 'Increase emergency fund by $1000',
+      reward: 750,
+      progress: 70,
+      status: 'active'
+    }
+  ],
+  transactions: [
+    {
+      id: 1,
+      date: '2024-01-15',
+      description: 'Grocery Shopping',
+      amount: 85.50,
+      type: 'expense',
+      category: 'Food'
+    },
+    {
+      id: 2,
+      date: '2024-01-20',
+      description: 'Salary Deposit',
+      amount: 2750,
+      type: 'income',
+      category: 'Salary'
+    }
+  ]
+};
+type  ViewType = 'dashboard' | 'challenges' | 'transactions';
+
+const FinancialFitnessCoach: React.FC = () => {
+  const [user] = useState<User>(initialUser);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'challenges' | 'transactions'>('dashboard');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const calculateSavingsPercentage = (): number => {
+    return Math.round((user.currentSavings / user.savingsGoal) * 100);
+  };
+
+  const calculateMonthlySpending = (): number => {
+    return user.transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, transaction) => sum + transaction.amount, 0);
+  };
+
+  const renderProgressBar = (progress: number, color: string = 'bg-[#55f86b]') => {
+    return (
+      <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
+        <div 
+          className={`${color} h-2.5 rounded-full`} 
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+    );
+  };
+
+  const pageVariants: Variants = {
+    initial: { opacity: 0 },
+    animate: { 
+      opacity: 1,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const logoVariants: Variants = {
+    initial: { 
+      scale: 1,
+      opacity: 1
+    },
+    animate: { 
+      scale: 0,
+      opacity: 0,
+      transition: { 
+        duration: 0.8,
+        ease: "easeInOut" 
+      }
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isLoading ? (
+        <motion.div 
+          key="loading"
+          initial={{ backgroundColor: 'black', opacity: 1 }}
+          animate={{ backgroundColor: 'black', opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.4 }  }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+        >
+          <motion.img 
+            src="/dollar_icon2.png" 
+            alt="Logo" 
+            variants={logoVariants}
+            initial="initial"
+            animate="animate"
+            width="100"
+            height="100"
+            className="absolute"
+          />
+        </motion.div>
+      ) : (
+        <motion.div 
+          initial="initial"
+          animate="animate"
+          variants={pageVariants}
+          className="min-h-screen bg-[#1a1a1a] flex"
+        >
+          <div className="w-64 bg-[#252525] p-6 flex flex-col">
+            <div className="flex items-center space-x-4 mb-10">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-[#2cd3a7]/20 p-3 rounded-full"
+              >
+                <img src="/dollar_icon2.png" alt="Logo" width="40" height="40"/>
+              </motion.div>
+              <div>
+                <h1 className="text-2xl font-bold text-[#2cd3a7]">{user.name}</h1>
+                <p className="text-gray-400 text-sm">monee - A Financial Literacy Platform</p>
+              </div>
+            </div>
+            <nav className="space-y-4">
+              {[
+                { icon: BarChart, label: 'Dashboard', tab: 'dashboard' },
+                { icon: Target, label: 'Challenges', tab: 'challenges' },
+                { icon: Wallet, label: 'Transactions', tab: 'transactions' },
+                { icon: Settings, label: 'Settings', tab: null }
+              ].map(({ icon: Icon, label, tab }) => (
+                <button 
+                  key={label}
+                  onClick={() => tab && setActiveTab(tab as ViewType)}
+                  className={`flex items-center w-full p-3 rounded-lg ${
+                    activeTab === tab 
+                      ? 'bg-[#2cd3a7]/20 text-[#2cd3a7]' 
+                      : 'text-gray-400 hover:bg-[#313131]'
+                  }`}
+                >
+                  <Icon className="mr-3" size={20} />
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex-grow p-8 overflow-y-auto">
+            {activeTab === 'dashboard' && (
+              <motion.div variants={pageVariants}>
+                <motion.h2 
+                  variants={pageVariants}
+                  className="text-3xl font-bold text-white mb-6"
+                >
+                  Welcome, {user.name}
+                </motion.h2>
+
+                <motion.div 
+                  variants={pageVariants}
+                  className="grid grid-cols-3 gap-6"
+                >
+                  <motion.div 
+                    variants={pageVariants}
+                    className="bg-[#2cd3a7]/10 p-6 rounded-lg"
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-white">Savings Progress</h3>
+                      <PiggyBank className="text-[#2cd3a7]" size={24} />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white">
+                        ${user.currentSavings} / ${user.savingsGoal}
+                      </span>
+                      <span className="text-white font-bold">
+                        {calculateSavingsPercentage()}%
+                      </span>
+                    </div>
+                    {renderProgressBar(calculateSavingsPercentage())}
+                  </motion.div>
+
+                  <motion.div 
+                    variants={pageVariants}
+                    className="bg-[#414141] p-6 rounded-lg"
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-white">Credit Score</h3>
+                      <CreditCard className="text-[#55f86b]" size={24} />
+                    </div>
+                    <div className="text-center">
+                      <span className="text-3xl font-bold text-white">{user.creditScore}</span>
+                      <p className="text-gray-400 text-sm mt-2">Good Standing</p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    variants={pageVariants}
+                    className="bg-[#414141] p-6 rounded-lg"
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold text-white">Monthly Spending</h3>
+                      <TrendingUp className="text-[#ff6b6b]" size={24} />
+                    </div>
+                    <div className="text-center">
+                      <span className="text-3xl font-bold text-white">
+                        ${calculateMonthlySpending()}
+                      </span>
+                      <p className="text-gray-400 text-sm mt-2">This Month</p>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {activeTab === 'challenges' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-bold text-white">Active Challenges</h2>
+                  <button 
+                    className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg 
+                    hover:opacity-90 transition flex items-center"
+                  >
+                    <Target className="mr-2" size={20} />
+                    Create Challenge
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {user.challenges.map(challenge => (
+                    <div 
+                      key={challenge.id} 
+                      className="bg-[#414141] border-2 border-[#2cd3a7]/20 rounded-lg p-5 hover:shadow-sm transition"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-semibold text-white text-xl">{challenge.title}</h4>
+                          <p className="text-gray-300 text-sm">{challenge.description}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-white font-bold text-lg">
+                            ${challenge.reward} Reward
+                          </span>
+                          {renderProgressBar(challenge.progress)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'transactions' && (
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-6">Transactions</h2>
+                <div className="bg-[#414141] rounded-lg">
+                  <table className="w-full text-white">
+                    <thead className="border-b border-[#2cd3a7]/20">
+                      <tr>
+                        <th className="p-4 text-left">Date</th>
+                        <th className="p-4 text-left">Description</th>
+                        <th className="p-4 text-left">Category</th>
+                        <th className="p-4 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {user.transactions.map(transaction => (
+                        <tr 
+                          key={transaction.id} 
+                          className="hover:bg-[#2cd3a7]/10 transition"
+                        >
+                          <td className="p-4">{transaction.date}</td>
+                          <td className="p-4">{transaction.description}</td>
+                          <td className="p-4">{transaction.category}</td>
+                          <td className={`p-4 text-right ${
+                            transaction.type === 'income' 
+                              ? 'text-[#55f86b]' 
+                              : 'text-[#ff6b6b]'
+                          }`}>
+                            ${transaction.amount.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default FinancialFitnessCoach;
