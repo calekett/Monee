@@ -129,14 +129,17 @@ const FinancialFitnessCoach: React.FC = () => {
     amountNeeded: 0
   });
 
-  // Calculate total points from all challenges
-//   const totalPoints = user.challenges.reduce(
-//     (sum, challenge) => sum + challenge.points,
-//     0
-//   );
+  // ADDED: State for handling the CSV file
+  const [csvFile, setCsvFile] = useState<File | null>(null);
 
   // Create state to handle the count-up animation
   const [pointsCount, setPointsCount] = useState(0);
+
+  // ADDED: Chatbot states
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<{ role: 'assistant' | 'user'; content: string }[]>([
+    { role: 'assistant', content: 'Hello, I am Moneebot. How can I assist you today?' },
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -168,10 +171,25 @@ const FinancialFitnessCoach: React.FC = () => {
     return Math.round((user.currentSavings / user.savingsGoal) * 100);
   };
 
+  // UPDATED: Only sum expenses for the current month + year, then round
   const calculateMonthlySpending = (): number => {
-    return user.transactions
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const spendingThisMonth = user.transactions
       .filter(t => t.type === 'expense')
+      .filter(t => {
+        const txDate = new Date(t.date);
+        return (
+          txDate.getMonth() === currentMonth && 
+          txDate.getFullYear() === currentYear
+        );
+      })
       .reduce((sum, transaction) => sum + transaction.amount, 0);
+
+    // Round to nearest decimal (here, 2 decimals)
+    return Math.round(spendingThisMonth * 100) / 100;
   };
 
   const renderProgressBar = (progress: number, color: string = 'bg-[#55f86b]') => {
@@ -194,8 +212,6 @@ const FinancialFitnessCoach: React.FC = () => {
     setUser({ 
       ...user, 
       challenges: updatedList,
-      // Optionally, you could add the new challenge's points to totalPoints
-      // totalPoints: user.totalPoints + newChallenge.points 
     });
     setNewChallenge({
       id: user.challenges.length + 2,
@@ -207,6 +223,90 @@ const FinancialFitnessCoach: React.FC = () => {
       amountNeeded: 0
     });
     setShowCreateForm(false);
+  };
+
+  // ADDED: Handle CSV file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setCsvFile(event.target.files[0]);
+    }
+  };
+
+  // ADDED: Parse CSV lines
+  const parseCSV = (text: string) => {
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+    const newTransactions: Transaction[] = [];
+
+    // We'll create transaction IDs by continuing from the last existing ID
+    let nextId = user.transactions.length ? user.transactions[user.transactions.length - 1].id + 1 : 1;
+
+    for (let line of lines) {
+      // Remove surrounding quotes if present
+      line = line.trim();
+      if (line.startsWith('"') && line.endsWith('"')) {
+        line = line.substring(1, line.length - 1);
+      }
+
+      // Split by "," inside the string
+      const parts = line.split('","');
+      // According to the format:
+      // [date, amount, "*", "", description]
+      if (parts.length >= 5) {
+        const date = parts[0];
+        const amountString = parts[1];
+        const desc = parts[4];
+
+        const amount = parseFloat(amountString);
+        const type = amount < 0 ? 'expense' : 'income';
+
+        // Create a new transaction object
+        newTransactions.push({
+          id: nextId++,
+          date: date,
+          description: desc,
+          amount: Math.abs(amount),
+          type,
+          category: 'General'
+        });
+      }
+    }
+
+    // Append new transactions to existing ones
+    setUser(prevUser => ({
+      ...prevUser,
+      transactions: [...prevUser.transactions, ...newTransactions]
+    }));
+  };
+
+  // ADDED: Handle the CSV upload & reading
+  const handleUploadCSV = () => {
+    if (!csvFile) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      if (typeof e.target?.result === 'string') {
+        parseCSV(e.target.result);
+      }
+    };
+    reader.readAsText(csvFile);
+  };
+
+  // ADDED: Chatbot submission handler
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // Add the user message
+    const newMessages = [...chatMessages, { role: 'user', content: chatInput }];
+    setChatMessages(newMessages);
+    setChatInput('');
+
+    // You can replace the code below with an actual AI/Backend call 
+    // to generate a real assistant response. For now, this is a placeholder.
+    const automatedResponse = "I'm here to help with any financial advice you need!";
+    setChatMessages(prev => [
+      ...prev,
+      { role: 'assistant', content: automatedResponse }
+    ]);
   };
 
   return (
@@ -334,7 +434,7 @@ const FinancialFitnessCoach: React.FC = () => {
                     </div>
                     <div className="text-center">
                       <span className="text-3xl font-bold text-white">
-                        ${calculateMonthlySpending()}
+                        ${calculateMonthlySpending().toFixed(2)}
                       </span>
                       <p className="text-gray-400 text-sm mt-2">This Month</p>
                     </div>
@@ -371,56 +471,56 @@ const FinancialFitnessCoach: React.FC = () => {
                   </div>
 
                   {showCreateForm && (
-  <form 
-    onSubmit={handleCreateChallengeSubmit}
-    className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4"
-  >
-    <div>
-      <label className="block text-white mb-1">Title</label>
-      <input
-        className="w-full p-2 rounded bg-gray-700 text-white"
-        type="text"
-        value={newChallenge.title}
-        onChange={(e) => setNewChallenge({ 
-          ...newChallenge, 
-          title: e.target.value 
-        })}
-        required
-      />
-    </div>
-    <div>
-      <label className="block text-white mb-1">Description</label>
-      <input
-        className="w-full p-2 rounded bg-gray-700 text-white"
-        type="text"
-        value={newChallenge.description}
-        onChange={(e) => setNewChallenge({ 
-          ...newChallenge, 
-          description: e.target.value 
-        })}
-      />
-    </div>
-    <div>
-      <label className="block text-white mb-1">Amount Needed</label>
-      <input
-        className="w-full p-2 rounded bg-gray-700 text-white"
-        type="number"
-        value={newChallenge.amountNeeded}
-        onChange={(e) => setNewChallenge({ 
-          ...newChallenge, 
-          amountNeeded: parseFloat(e.target.value) 
-        })}
-        required
-      />
-    </div>
-    <button 
-      type="submit" 
-      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
-    >
-      Add Challenge
-    </button>
-  </form>
-)}
+                    <form 
+                      onSubmit={handleCreateChallengeSubmit}
+                      className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4"
+                    >
+                      <div>
+                        <label className="block text-white mb-1">Title</label>
+                        <input
+                          className="w-full p-2 rounded bg-gray-700 text-white"
+                          type="text"
+                          value={newChallenge.title}
+                          onChange={(e) => setNewChallenge({ 
+                            ...newChallenge, 
+                            title: e.target.value 
+                          })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-1">Description</label>
+                        <input
+                          className="w-full p-2 rounded bg-gray-700 text-white"
+                          type="text"
+                          value={newChallenge.description}
+                          onChange={(e) => setNewChallenge({ 
+                            ...newChallenge, 
+                            description: e.target.value 
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-1">Amount Needed</label>
+                        <input
+                          className="w-full p-2 rounded bg-gray-700 text-white"
+                          type="number"
+                          value={newChallenge.amountNeeded}
+                          onChange={(e) => setNewChallenge({ 
+                            ...newChallenge, 
+                            amountNeeded: parseFloat(e.target.value) 
+                          })}
+                          required
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
+                      >
+                        Add Challenge
+                      </button>
+                    </form>
+                  )}
 
                   <div className="space-y-4">
                     {user.challenges.map(challenge => {
@@ -457,6 +557,24 @@ const FinancialFitnessCoach: React.FC = () => {
               <motion.div variants={pageVariants}>
                 <motion.div variants={pageVariants}>
                   <h2 className="text-3xl font-bold text-white mb-6">Transactions</h2>
+
+                  {/* ADDED: CSV Upload Section */}
+                  <div className="mb-4">
+                    <input 
+                      type="file" 
+                      accept=".csv"
+                      onChange={handleFileChange}
+                      className="text-white mb-2"
+                    />
+                    <button 
+                      onClick={handleUploadCSV}
+                      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
+                    >
+                      Upload CSV
+                    </button>
+                  </div>
+                  {/* END CSV Upload Section */}
+
                   <div className="bg-[#414141] rounded-lg">
                     <table className="w-full text-white">
                       <thead className="border-b border-[#2cd3a7]/20">
@@ -502,9 +620,38 @@ const FinancialFitnessCoach: React.FC = () => {
                 >
                   Moneebot
                 </motion.h2>
-                <motion.p variants={pageVariants} className="text-white">
+                <motion.p variants={pageVariants} className="text-white mb-4">
                   Get personalized financial advice from moneebot.
                 </motion.p>
+
+                {/* ADDED: Chatbot UI */}
+                <div className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4">
+                  <div className="overflow-y-auto max-h-72 mb-4 pr-2">
+                    {chatMessages.map((msg, index) => (
+                      <div key={index} className="mb-2">
+                        <strong className={msg.role === 'user' ? 'text-[#55f86b]' : 'text-[#2cd3a7]'}>
+                          {msg.role === 'user' ? user.name : 'Moneebot'}:
+                        </strong>{" "}
+                        <span className="text-white">{msg.content}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <form onSubmit={handleChatSubmit} className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Ask Moneebot something..."
+                      className="flex-grow p-2 rounded bg-gray-700 text-white focus:outline-none"
+                    />
+                    <button 
+                      type="submit" 
+                      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
+                    >
+                      Send
+                    </button>
+                  </form>
+                </div>
               </motion.div>
             )}
 
@@ -560,7 +707,8 @@ const FinancialFitnessCoach: React.FC = () => {
                 </div>
               </motion.div>
             )}
-                    {activeTab === 'settings' && (
+            
+            {activeTab === 'settings' && (
               <motion.div variants={pageVariants}>
                 <motion.h2 
                   variants={pageVariants}
