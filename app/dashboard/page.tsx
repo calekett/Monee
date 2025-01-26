@@ -134,7 +134,7 @@ const FinancialFitnessCoach: React.FC = () => {
       scale: 0,
       opacity: 0,
       transition: { 
-        duration: 0.8,
+        duration: 1.8,
         ease: "easeInOut" 
       }
     }
