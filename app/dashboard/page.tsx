@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
- TrendingUp, Target, 
+  TrendingUp, Target, Plus,
   CreditCard, Wallet, PiggyBank, BarChart, Settings 
 } from 'lucide-react';
 
@@ -79,12 +79,28 @@ const initialUser: User = {
     }
   ]
 };
-type  ViewType = 'dashboard' | 'challenges' | 'transactions';
+
+type ViewType = 'dashboard' | 'challenges' | 'transactions';
 
 const FinancialFitnessCoach: React.FC = () => {
-  const [user] = useState<User>(initialUser);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'challenges' | 'transactions'>('dashboard');
+  // Allow us to update user
+  const [user, setUser] = useState<User>(initialUser);
+
+  const [activeTab, setActiveTab] = useState<ViewType>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
+
+  // State for toggling form
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // Temporary state for a new challenge
+  const [newChallenge, setNewChallenge] = useState<Challenge>({
+    id: user.challenges.length + 1,
+    title: '',
+    description: '',
+    reward: 0,
+    progress: 0,
+    status: 'active'
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -112,6 +128,22 @@ const FinancialFitnessCoach: React.FC = () => {
         ></div>
       </div>
     );
+  };
+
+  // Handle new challenge creation
+  const handleCreateChallengeSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const updatedList = [...user.challenges, { ...newChallenge, id: user.challenges.length + 1 }];
+    setUser({ ...user, challenges: updatedList });
+    setNewChallenge({
+      id: user.challenges.length + 2,
+      title: '',
+      description: '',
+      reward: 0,
+      progress: 0,
+      status: 'active'
+    });
+    setShowCreateForm(false);
   };
 
   const pageVariants: Variants = {
@@ -279,11 +311,65 @@ const FinancialFitnessCoach: React.FC = () => {
                   <button 
                     className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg 
                     hover:opacity-90 transition flex items-center"
+                    onClick={() => setShowCreateForm(true)}
                   >
-                    <Target className="mr-2" size={20} />
+                    <Plus className="mr-2" size={20} />
                     Create Challenge
                   </button>
                 </div>
+
+                {/* Form for creating a new challenge */}
+                {showCreateForm && (
+                  <form 
+                    onSubmit={handleCreateChallengeSubmit}
+                    className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4"
+                  >
+                    <div>
+                      <label className="block text-white mb-1">Title</label>
+                      <input
+                        className="w-full p-2 rounded bg-gray-700 text-white"
+                        type="text"
+                        value={newChallenge.title}
+                        onChange={(e) => setNewChallenge({ 
+                          ...newChallenge, 
+                          title: e.target.value 
+                        })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white mb-1">Description</label>
+                      <input
+                        className="w-full p-2 rounded bg-gray-700 text-white"
+                        type="text"
+                        value={newChallenge.description}
+                        onChange={(e) => setNewChallenge({ 
+                          ...newChallenge, 
+                          description: e.target.value 
+                        })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white mb-1">Reward</label>
+                      <input
+                        className="w-full p-2 rounded bg-gray-700 text-white"
+                        type="number"
+                        value={newChallenge.reward}
+                        onChange={(e) => setNewChallenge({ 
+                          ...newChallenge, 
+                          reward: parseFloat(e.target.value) 
+                        })}
+                        required
+                      />
+                    </div>
+                    <button 
+                      type="submit" 
+                      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
+                    >
+                      Add Challenge
+                    </button>
+                  </form>
+                )}
 
                 <div className="space-y-4">
                   {user.challenges.map(challenge => (
@@ -331,11 +417,13 @@ const FinancialFitnessCoach: React.FC = () => {
                           <td className="p-4">{transaction.date}</td>
                           <td className="p-4">{transaction.description}</td>
                           <td className="p-4">{transaction.category}</td>
-                          <td className={`p-4 text-right ${
-                            transaction.type === 'income' 
-                              ? 'text-[#55f86b]' 
-                              : 'text-[#ff6b6b]'
-                          }`}>
+                          <td 
+                            className={`p-4 text-right ${
+                              transaction.type === 'income' 
+                                ? 'text-[#55f86b]' 
+                                : 'text-[#ff6b6b]'
+                            }`}
+                          >
                             ${transaction.amount.toFixed(2)}
                           </td>
                         </tr>
