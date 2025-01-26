@@ -3,16 +3,17 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   TrendingUp, Target, Plus,
-  CreditCard, Wallet, PiggyBank, BarChart, Settings, DollarSign
+  CreditCard, Wallet, PiggyBank, BarChart, Settings, DollarSign, Code
 } from 'lucide-react';
 
 interface Challenge {
   id: number;
   title: string;
   description: string;
-  reward: number;
+  points: number;
   progress: number;
   status: 'active' | 'completed' | 'failed';
+  amountNeeded: number;
 }
 
 interface Transaction {
@@ -47,17 +48,19 @@ const initialUser: User = {
       id: 1,
       title: '30-Day No Dining Out Challenge',
       description: 'Save money by cooking at home',
-      reward: 500,
+      points: 500,
       progress: 45,
-      status: 'active'
+      status: 'active',
+      amountNeeded: 500
     },
     {
       id: 2, 
       title: 'Emergency Fund Boost',
       description: 'Increase emergency fund by $1000',
-      reward: 750,
+      points: 750,
       progress: 70,
-      status: 'active'
+      status: 'active',
+      amountNeeded: 1000
     }
   ],
   transactions: [
@@ -80,7 +83,7 @@ const initialUser: User = {
   ]
 };
 
-type ViewType = 'dashboard' | 'challenges' | 'transactions' | 'moneebot';
+type ViewType = 'dashboard' | 'challenges' | 'transactions' | 'moneebot' | 'redeem';
 
 const pageVariants: Variants = {
   initial: { opacity: 0 },
@@ -112,17 +115,25 @@ const FinancialFitnessCoach: React.FC = () => {
   const [user, setUser] = useState<User>(initialUser);
   const [activeTab, setActiveTab] = useState<ViewType>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
-
   const [showCreateForm, setShowCreateForm] = useState(false);
-
   const [newChallenge, setNewChallenge] = useState<Challenge>({
     id: user.challenges.length + 1,
     title: '',
     description: '',
-    reward: 0,
+    points: 0,
     progress: 0,
-    status: 'active'
+    status: 'active',
+    amountNeeded: 0
   });
+
+  // Calculate total points from all challenges
+  const totalPoints = user.challenges.reduce(
+    (sum, challenge) => sum + challenge.points,
+    0
+  );
+
+  // Create state to handle the count-up animation
+  const [pointsCount, setPointsCount] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -130,6 +141,25 @@ const FinancialFitnessCoach: React.FC = () => {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Trigger the count-up after loading finishes
+  useEffect(() => {
+    if (!isLoading) {
+      let current = 0;
+      const increment = Math.ceil(totalPoints / 60);
+
+      const countInterval = setInterval(() => {
+        current += increment;
+        if (current >= totalPoints) {
+          current = totalPoints;
+          clearInterval(countInterval);
+        }
+        setPointsCount(current);
+      }, 25);
+
+      return () => clearInterval(countInterval);
+    }
+  }, [isLoading, totalPoints]);
 
   const calculateSavingsPercentage = (): number => {
     return Math.round((user.currentSavings / user.savingsGoal) * 100);
@@ -163,9 +193,10 @@ const FinancialFitnessCoach: React.FC = () => {
       id: user.challenges.length + 2,
       title: '',
       description: '',
-      reward: 0,
+      points: 0,
       progress: 0,
-      status: 'active'
+      status: 'active',
+      amountNeeded: 0
     });
     setShowCreateForm(false);
   };
@@ -177,7 +208,7 @@ const FinancialFitnessCoach: React.FC = () => {
           key="loading"
           initial={{ backgroundColor: 'black', opacity: 1 }}
           animate={{ backgroundColor: 'black', opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.4 }  }}
+          exit={{ opacity: 0, transition: { duration: 0.4 } }}
           className="fixed inset-0 z-50 flex items-center justify-center"
         >
           <motion.img
@@ -210,7 +241,9 @@ const FinancialFitnessCoach: React.FC = () => {
               </motion.div>
               <div>
                 <h1 className="text-2xl font-bold text-[#2cd3a7]">{user.name}</h1>
-                <p className="text-gray-400 text-sm">monee - A Financial Literacy Platform</p>
+                <p className="text-gray-400 text-sm">
+                  <span className="text-[#55f86b] font-bold">monee</span> - A Financial Literacy Platform
+                </p>
               </div>
             </div>
             <nav className="space-y-4">
@@ -218,7 +251,8 @@ const FinancialFitnessCoach: React.FC = () => {
                 { icon: BarChart, label: 'Dashboard', tab: 'dashboard' },
                 { icon: Target, label: 'Challenges', tab: 'challenges' },
                 { icon: Wallet, label: 'Transactions', tab: 'transactions' },
-                { icon: DollarSign, label: 'Moneebot', tab: 'moneebot' },
+                { icon: Code, label: 'Moneebot', tab: 'moneebot' },
+                { icon: DollarSign, label: 'Redeem', tab: 'redeem' },
                 { icon: Settings, label: 'Settings', tab: null }
               ].map(({ icon: Icon, label, tab }) => (
                 <button
@@ -236,7 +270,6 @@ const FinancialFitnessCoach: React.FC = () => {
               ))}
             </nav>
           </div>
-
           <div className="flex-grow p-8 overflow-y-auto">
             {activeTab === 'dashboard' && (
               <motion.div variants={pageVariants}>
@@ -299,6 +332,18 @@ const FinancialFitnessCoach: React.FC = () => {
                     </div>
                   </motion.div>
                 </motion.div>
+
+                <motion.div 
+                  variants={pageVariants}
+                  className="bg-[#2cd3a7]/10 mt-6 p-10 rounded-lg text-center"
+                >
+                  <h3 className="text-4x1 font-bold text-white mb-2">Total Points</h3>
+                  <motion.span 
+                    className="text-9xl font-extrabold text-[#2cd3a7]"
+                  >
+                    {pointsCount}
+                  </motion.span>
+                </motion.div>
               </motion.div>
             )}
 
@@ -348,14 +393,27 @@ const FinancialFitnessCoach: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-white mb-1">Reward</label>
+                        <label className="block text-white mb-1">Points</label>
                         <input
                           className="w-full p-2 rounded bg-gray-700 text-white"
                           type="number"
-                          value={newChallenge.reward}
+                          value={newChallenge.points}
                           onChange={(e) => setNewChallenge({ 
                             ...newChallenge, 
-                            reward: parseFloat(e.target.value) 
+                            points: parseFloat(e.target.value) 
+                          })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-1">Amount Needed</label>
+                        <input
+                          className="w-full p-2 rounded bg-gray-700 text-white"
+                          type="number"
+                          value={newChallenge.amountNeeded}
+                          onChange={(e) => setNewChallenge({ 
+                            ...newChallenge, 
+                            amountNeeded: parseFloat(e.target.value) 
                           })}
                           required
                         />
@@ -370,25 +428,31 @@ const FinancialFitnessCoach: React.FC = () => {
                   )}
 
                   <div className="space-y-4">
-                    {user.challenges.map(challenge => (
-                      <div 
-                        key={challenge.id} 
-                        className="bg-[#414141] border-2 border-[#2cd3a7]/20 rounded-lg p-5 hover:shadow-sm transition"
-                      >
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-semibold text-white text-xl">{challenge.title}</h4>
-                            <p className="text-gray-300 text-sm">{challenge.description}</p>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-white font-bold text-lg">
-                              ${challenge.reward} Reward
-                            </span>
-                            {renderProgressBar(challenge.progress)}
+                    {user.challenges.map(challenge => {
+                      const currentAmount = Math.round((challenge.progress / 100) * challenge.amountNeeded);
+                      return (
+                        <div 
+                          key={challenge.id} 
+                          className="bg-[#414141] border-2 border-[#2cd3a7]/20 rounded-lg p-5 hover:shadow-sm transition"
+                        >
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="font-semibold text-white text-xl">{challenge.title}</h4>
+                              <p className="text-gray-300 text-sm">{challenge.description}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-white font-bold text-lg">
+                                {challenge.points} Points
+                              </span>
+                              {renderProgressBar(challenge.progress)}
+                              <div className="text-white mt-2">
+                                ${currentAmount} / ${challenge.amountNeeded}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </motion.div>
               </motion.div>
@@ -446,6 +510,59 @@ const FinancialFitnessCoach: React.FC = () => {
                 <motion.p variants={pageVariants} className="text-white">
                   Get personalized financial advice from moneebot.
                 </motion.p>
+              </motion.div>
+            )}
+
+            {activeTab === 'redeem' && (
+              <motion.div variants={pageVariants}>
+                <motion.h2 
+                  variants={pageVariants}
+                  className="text-3xl font-bold text-white mb-6"
+                >
+                  Redeem
+                </motion.h2>
+                <div className="text-white mb-4">
+                  Redeem your hard-earned points here! You currently have {pointsCount} points
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-xl text-white mb-2">20,000 Points</h3>
+                  <div className="relative group w-64 h-64">
+                    <img
+                      src="/bn.png"
+                      alt="bn"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <div
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 
+                                 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className="text-white text-lg font-bold">
+                        10% Off TAMU B&N
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-xl text-white mb-2">40,000 Points</h3>
+                  <p className="text-white">More rewards coming soon!</p>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-xl text-white mb-2">60,000 Points</h3>
+                  <p className="text-white">More rewards coming soon!</p>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-xl text-white mb-2">80,000 Points</h3>
+                  <p className="text-white">More rewards coming soon!</p>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-xl text-white mb-2">100,000 Points</h3>
+                  <p className="text-white">More rewards coming soon!</p>
+                </div>
               </motion.div>
             )}
           </div>
