@@ -3,7 +3,7 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   TrendingUp, Target, Plus,
-  CreditCard, Wallet, PiggyBank, BarChart, Settings 
+  CreditCard, Wallet, PiggyBank, BarChart, Settings, DollarSign
 } from 'lucide-react';
 
 interface Challenge {
@@ -218,7 +218,7 @@ const FinancialFitnessCoach: React.FC = () => {
                 { icon: BarChart, label: 'Dashboard', tab: 'dashboard' },
                 { icon: Target, label: 'Challenges', tab: 'challenges' },
                 { icon: Wallet, label: 'Transactions', tab: 'transactions' },
-                { icon: PiggyBank, label: 'Moneebot', tab: 'moneebot' },
+                { icon: DollarSign, label: 'Moneebot', tab: 'moneebot' },
                 { icon: Settings, label: 'Settings', tab: null }
               ].map(({ icon: Icon, label, tab }) => (
                 <button
