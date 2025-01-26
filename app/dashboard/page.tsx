@@ -80,12 +80,10 @@ const initialUser: User = {
   ]
 };
 
-type ViewType = 'dashboard' | 'challenges' | 'transactions';
+type ViewType = 'dashboard' | 'challenges' | 'transactions' | 'moneebot';
 
 const FinancialFitnessCoach: React.FC = () => {
-  // Allow us to update user
   const [user, setUser] = useState<User>(initialUser);
-
   const [activeTab, setActiveTab] = useState<ViewType>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -133,7 +131,10 @@ const FinancialFitnessCoach: React.FC = () => {
   // Handle new challenge creation
   const handleCreateChallengeSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const updatedList = [...user.challenges, { ...newChallenge, id: user.challenges.length + 1 }];
+    const updatedList = [
+      ...user.challenges, 
+      { ...newChallenge, id: user.challenges.length + 1 }
+    ];
     setUser({ ...user, challenges: updatedList });
     setNewChallenge({
       id: user.challenges.length + 2,
@@ -220,6 +221,7 @@ const FinancialFitnessCoach: React.FC = () => {
                 { icon: BarChart, label: 'Dashboard', tab: 'dashboard' },
                 { icon: Target, label: 'Challenges', tab: 'challenges' },
                 { icon: Wallet, label: 'Transactions', tab: 'transactions' },
+                { icon: PiggyBank, label: 'Moneebot', tab: 'moneebot' },
                 { icon: Settings, label: 'Settings', tab: null }
               ].map(({ icon: Icon, label, tab }) => (
                 <button 
@@ -318,7 +320,6 @@ const FinancialFitnessCoach: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Form for creating a new challenge */}
                 {showCreateForm && (
                   <form 
                     onSubmit={handleCreateChallengeSubmit}
@@ -432,6 +433,20 @@ const FinancialFitnessCoach: React.FC = () => {
                   </table>
                 </div>
               </div>
+            )}
+
+            {activeTab === 'moneebot' && (
+              <motion.div variants={pageVariants}>
+                <motion.h2 
+                  variants={pageVariants}
+                  className="text-3xl font-bold text-white mb-6"
+                >
+                  Moneebot
+                </motion.h2>
+                <motion.p variants={pageVariants} className="text-white">
+                  This is the moneebot section. You can add your custom interface here.
+                </motion.p>
+              </motion.div>
             )}
           </div>
         </motion.div>
