@@ -83,7 +83,7 @@ const initialUser: User = {
   ]
 };
 
-type ViewType = 'dashboard' | 'challenges' | 'transactions' | 'moneebot' | 'redeem';
+type ViewType = 'dashboard' | 'challenges' | 'transactions' | 'moneebot' | 'redeem' | 'settings';
 
 const pageVariants: Variants = {
   initial: { opacity: 0 },
@@ -253,7 +253,7 @@ const FinancialFitnessCoach: React.FC = () => {
                 { icon: Wallet, label: 'Transactions', tab: 'transactions' },
                 { icon: Code, label: 'Moneebot', tab: 'moneebot' },
                 { icon: DollarSign, label: 'Redeem', tab: 'redeem' },
-                { icon: Settings, label: 'Settings', tab: null }
+                { icon: Settings, label: 'Settings', tab: 'settings' }
               ].map(({ icon: Icon, label, tab }) => (
                 <button
                   key={label}
@@ -563,6 +563,19 @@ const FinancialFitnessCoach: React.FC = () => {
                   <h3 className="text-xl text-white mb-2">100,000 Points</h3>
                   <p className="text-white">More rewards coming soon!</p>
                 </div>
+              </motion.div>
+            )}
+                    {activeTab === 'settings' && (
+              <motion.div variants={pageVariants}>
+                <motion.h2 
+                  variants={pageVariants}
+                  className="text-3xl font-bold text-white mb-6"
+                >
+                  Settings
+                </motion.h2>
+                <motion.p variants={pageVariants} className="text-white">
+                  hi
+                </motion.p>
               </motion.div>
             )}
           </div>
