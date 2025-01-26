@@ -40,7 +40,6 @@ interface Message {
   name: string;
   message: string;
 }
-
 const Chatbox: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -133,7 +132,6 @@ const Chatbox: React.FC = () => {
     </div>
   );
 };
-
 const initialUser: User = {
   name: 'Cale Kettner',
   age: 24,
@@ -231,12 +229,6 @@ const FinancialFitnessCoach: React.FC = () => {
 
   // Create state to handle the count-up animation
   const [pointsCount, setPointsCount] = useState(0);
-
-  // ADDED: Chatbot states
-  const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<{ role: 'assistant' | 'user'; content: string }[]>([
-    { role: 'assistant', content: 'Hello, I am Moneebot. How can I assist you today?' },
-  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -385,25 +377,6 @@ const FinancialFitnessCoach: React.FC = () => {
       }
     };
     reader.readAsText(csvFile);
-  };
-
-  // ADDED: Chatbot submission handler
-  const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    // Add the user message
-    const newMessages = [...chatMessages, { role: 'user', content: chatInput }];
-    setChatMessages(newMessages);
-    setChatInput('');
-
-    // You can replace the code below with an actual AI/Backend call 
-    // to generate a real assistant response. For now, this is a placeholder.
-    const automatedResponse = "I'm here to help with any financial advice you need!";
-    setChatMessages(prev => [
-      ...prev,
-      { role: 'assistant', content: automatedResponse }
-    ]);
   };
 
   return (
@@ -709,7 +682,7 @@ const FinancialFitnessCoach: React.FC = () => {
               </motion.div>
             )}
 
-      {activeTab === 'moneebot' && <Chatbox />}
+            {activeTab === 'moneebot' && <Chatbox />}
 
 
             {activeTab === 'redeem' && (
