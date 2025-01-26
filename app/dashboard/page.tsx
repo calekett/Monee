@@ -444,7 +444,7 @@ const FinancialFitnessCoach: React.FC = () => {
                   Moneebot
                 </motion.h2>
                 <motion.p variants={pageVariants} className="text-white">
-                  This is the moneebot section. You can add your custom interface here.
+                  Get personalized financial advice from moneebot.
                 </motion.p>
               </motion.div>
             )}
