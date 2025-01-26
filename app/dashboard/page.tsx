@@ -130,10 +130,10 @@ const FinancialFitnessCoach: React.FC = () => {
   });
 
   // Calculate total points from all challenges
-  const totalPoints = user.challenges.reduce(
-    (sum, challenge) => sum + challenge.points,
-    0
-  );
+//   const totalPoints = user.challenges.reduce(
+//     (sum, challenge) => sum + challenge.points,
+//     0
+//   );
 
   // Create state to handle the count-up animation
   const [pointsCount, setPointsCount] = useState(0);
