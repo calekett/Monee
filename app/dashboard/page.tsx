@@ -32,6 +32,7 @@ interface User {
   creditScore: number;
   savingsGoal: number;
   currentSavings: number;
+  totalPoints: number;
   challenges: Challenge[];
   transactions: Transaction[];
 }
@@ -43,6 +44,7 @@ const initialUser: User = {
   creditScore: 680,
   savingsGoal: 10000,
   currentSavings: 3500,
+  totalPoints: 1000,
   challenges: [
     {
       id: 1,
@@ -63,6 +65,7 @@ const initialUser: User = {
       amountNeeded: 1000
     }
   ],
+  
   transactions: [
     {
       id: 1,
@@ -120,7 +123,7 @@ const FinancialFitnessCoach: React.FC = () => {
     id: user.challenges.length + 1,
     title: '',
     description: '',
-    points: 0,
+    points: 10,
     progress: 0,
     status: 'active',
     amountNeeded: 0
@@ -146,12 +149,12 @@ const FinancialFitnessCoach: React.FC = () => {
   useEffect(() => {
     if (!isLoading) {
       let current = 0;
-      const increment = Math.ceil(totalPoints / 60);
+      const increment = Math.ceil(user.totalPoints / 60);
 
       const countInterval = setInterval(() => {
         current += increment;
-        if (current >= totalPoints) {
-          current = totalPoints;
+        if (current >= user.totalPoints) {
+          current = user.totalPoints;
           clearInterval(countInterval);
         }
         setPointsCount(current);
@@ -159,7 +162,7 @@ const FinancialFitnessCoach: React.FC = () => {
 
       return () => clearInterval(countInterval);
     }
-  }, [isLoading, totalPoints]);
+  }, [isLoading, user.totalPoints]);
 
   const calculateSavingsPercentage = (): number => {
     return Math.round((user.currentSavings / user.savingsGoal) * 100);
@@ -188,7 +191,12 @@ const FinancialFitnessCoach: React.FC = () => {
       ...user.challenges, 
       { ...newChallenge, id: user.challenges.length + 1 }
     ];
-    setUser({ ...user, challenges: updatedList });
+    setUser({ 
+      ...user, 
+      challenges: updatedList,
+      // Optionally, you could add the new challenge's points to totalPoints
+      // totalPoints: user.totalPoints + newChallenge.points 
+    });
     setNewChallenge({
       id: user.challenges.length + 2,
       title: '',
@@ -363,69 +371,56 @@ const FinancialFitnessCoach: React.FC = () => {
                   </div>
 
                   {showCreateForm && (
-                    <form 
-                      onSubmit={handleCreateChallengeSubmit}
-                      className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4"
-                    >
-                      <div>
-                        <label className="block text-white mb-1">Title</label>
-                        <input
-                          className="w-full p-2 rounded bg-gray-700 text-white"
-                          type="text"
-                          value={newChallenge.title}
-                          onChange={(e) => setNewChallenge({ 
-                            ...newChallenge, 
-                            title: e.target.value 
-                          })}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white mb-1">Description</label>
-                        <input
-                          className="w-full p-2 rounded bg-gray-700 text-white"
-                          type="text"
-                          value={newChallenge.description}
-                          onChange={(e) => setNewChallenge({ 
-                            ...newChallenge, 
-                            description: e.target.value 
-                          })}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white mb-1">Points</label>
-                        <input
-                          className="w-full p-2 rounded bg-gray-700 text-white"
-                          type="number"
-                          value={newChallenge.points}
-                          onChange={(e) => setNewChallenge({ 
-                            ...newChallenge, 
-                            points: parseFloat(e.target.value) 
-                          })}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white mb-1">Amount Needed</label>
-                        <input
-                          className="w-full p-2 rounded bg-gray-700 text-white"
-                          type="number"
-                          value={newChallenge.amountNeeded}
-                          onChange={(e) => setNewChallenge({ 
-                            ...newChallenge, 
-                            amountNeeded: parseFloat(e.target.value) 
-                          })}
-                          required
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
-                      >
-                        Add Challenge
-                      </button>
-                    </form>
-                  )}
+  <form 
+    onSubmit={handleCreateChallengeSubmit}
+    className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4"
+  >
+    <div>
+      <label className="block text-white mb-1">Title</label>
+      <input
+        className="w-full p-2 rounded bg-gray-700 text-white"
+        type="text"
+        value={newChallenge.title}
+        onChange={(e) => setNewChallenge({ 
+          ...newChallenge, 
+          title: e.target.value 
+        })}
+        required
+      />
+    </div>
+    <div>
+      <label className="block text-white mb-1">Description</label>
+      <input
+        className="w-full p-2 rounded bg-gray-700 text-white"
+        type="text"
+        value={newChallenge.description}
+        onChange={(e) => setNewChallenge({ 
+          ...newChallenge, 
+          description: e.target.value 
+        })}
+      />
+    </div>
+    <div>
+      <label className="block text-white mb-1">Amount Needed</label>
+      <input
+        className="w-full p-2 rounded bg-gray-700 text-white"
+        type="number"
+        value={newChallenge.amountNeeded}
+        onChange={(e) => setNewChallenge({ 
+          ...newChallenge, 
+          amountNeeded: parseFloat(e.target.value) 
+        })}
+        required
+      />
+    </div>
+    <button 
+      type="submit" 
+      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
+    >
+      Add Challenge
+    </button>
+  </form>
+)}
 
                   <div className="space-y-4">
                     {user.challenges.map(challenge => {
