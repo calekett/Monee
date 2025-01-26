@@ -82,15 +82,39 @@ const initialUser: User = {
 
 type ViewType = 'dashboard' | 'challenges' | 'transactions' | 'moneebot';
 
+const pageVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: { 
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      staggerChildren: 0.2
+    }
+  }
+};
+
+const logoVariants: Variants = {
+  initial: { 
+    scale: 1,
+    opacity: 1
+  },
+  animate: { 
+    scale: 0,
+    opacity: 0,
+    transition: { 
+      duration: 1.8,
+      ease: "easeInOut" 
+    }
+  }
+};
+
 const FinancialFitnessCoach: React.FC = () => {
   const [user, setUser] = useState<User>(initialUser);
   const [activeTab, setActiveTab] = useState<ViewType>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
 
-  // State for toggling form
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Temporary state for a new challenge
   const [newChallenge, setNewChallenge] = useState<Challenge>({
     id: user.challenges.length + 1,
     title: '',
@@ -128,7 +152,6 @@ const FinancialFitnessCoach: React.FC = () => {
     );
   };
 
-  // Handle new challenge creation
   const handleCreateChallengeSubmit = (e: FormEvent) => {
     e.preventDefault();
     const updatedList = [
@@ -147,45 +170,19 @@ const FinancialFitnessCoach: React.FC = () => {
     setShowCreateForm(false);
   };
 
-  const pageVariants: Variants = {
-    initial: { opacity: 0 },
-    animate: { 
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.2
-      }
-    }
-  };
-
-  const logoVariants: Variants = {
-    initial: { 
-      scale: 1,
-      opacity: 1
-    },
-    animate: { 
-      scale: 0,
-      opacity: 0,
-      transition: { 
-        duration: 1.8,
-        ease: "easeInOut" 
-      }
-    }
-  };
-
   return (
     <AnimatePresence>
       {isLoading ? (
-        <motion.div 
+        <motion.div
           key="loading"
           initial={{ backgroundColor: 'black', opacity: 1 }}
           animate={{ backgroundColor: 'black', opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.4 }  }}
           className="fixed inset-0 z-50 flex items-center justify-center"
         >
-          <motion.img 
-            src="/dollar_icon2.png" 
-            alt="Logo" 
+          <motion.img
+            src="/dollar_icon2.png"
+            alt="Logo"
             variants={logoVariants}
             initial="initial"
             animate="animate"
@@ -195,7 +192,7 @@ const FinancialFitnessCoach: React.FC = () => {
           />
         </motion.div>
       ) : (
-        <motion.div 
+        <motion.div
           initial="initial"
           animate="animate"
           variants={pageVariants}
@@ -224,7 +221,7 @@ const FinancialFitnessCoach: React.FC = () => {
                 { icon: PiggyBank, label: 'Moneebot', tab: 'moneebot' },
                 { icon: Settings, label: 'Settings', tab: null }
               ].map(({ icon: Icon, label, tab }) => (
-                <button 
+                <button
                   key={label}
                   onClick={() => tab && setActiveTab(tab as ViewType)}
                   className={`flex items-center w-full p-3 rounded-lg ${
@@ -249,7 +246,6 @@ const FinancialFitnessCoach: React.FC = () => {
                 >
                   Welcome, {user.name}
                 </motion.h2>
-
                 <motion.div 
                   variants={pageVariants}
                   className="grid grid-cols-3 gap-6"
@@ -307,132 +303,136 @@ const FinancialFitnessCoach: React.FC = () => {
             )}
 
             {activeTab === 'challenges' && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-3xl font-bold text-white">Active Challenges</h2>
-                  <button 
-                    className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg 
-                    hover:opacity-90 transition flex items-center"
-                    onClick={() => setShowCreateForm(true)}
-                  >
-                    <Plus className="mr-2" size={20} />
-                    Create Challenge
-                  </button>
-                </div>
-
-                {showCreateForm && (
-                  <form 
-                    onSubmit={handleCreateChallengeSubmit}
-                    className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4"
-                  >
-                    <div>
-                      <label className="block text-white mb-1">Title</label>
-                      <input
-                        className="w-full p-2 rounded bg-gray-700 text-white"
-                        type="text"
-                        value={newChallenge.title}
-                        onChange={(e) => setNewChallenge({ 
-                          ...newChallenge, 
-                          title: e.target.value 
-                        })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-white mb-1">Description</label>
-                      <input
-                        className="w-full p-2 rounded bg-gray-700 text-white"
-                        type="text"
-                        value={newChallenge.description}
-                        onChange={(e) => setNewChallenge({ 
-                          ...newChallenge, 
-                          description: e.target.value 
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-white mb-1">Reward</label>
-                      <input
-                        className="w-full p-2 rounded bg-gray-700 text-white"
-                        type="number"
-                        value={newChallenge.reward}
-                        onChange={(e) => setNewChallenge({ 
-                          ...newChallenge, 
-                          reward: parseFloat(e.target.value) 
-                        })}
-                        required
-                      />
-                    </div>
+              <motion.div variants={pageVariants}>
+                <motion.div variants={pageVariants}>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-3xl font-bold text-white">Active Challenges</h2>
                     <button 
-                      type="submit" 
-                      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
+                      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg 
+                      hover:opacity-90 transition flex items-center"
+                      onClick={() => setShowCreateForm(true)}
                     >
-                      Add Challenge
+                      <Plus className="mr-2" size={20} />
+                      Create Challenge
                     </button>
-                  </form>
-                )}
+                  </div>
 
-                <div className="space-y-4">
-                  {user.challenges.map(challenge => (
-                    <div 
-                      key={challenge.id} 
-                      className="bg-[#414141] border-2 border-[#2cd3a7]/20 rounded-lg p-5 hover:shadow-sm transition"
+                  {showCreateForm && (
+                    <form 
+                      onSubmit={handleCreateChallengeSubmit}
+                      className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4"
                     >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-semibold text-white text-xl">{challenge.title}</h4>
-                          <p className="text-gray-300 text-sm">{challenge.description}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-white font-bold text-lg">
-                            ${challenge.reward} Reward
-                          </span>
-                          {renderProgressBar(challenge.progress)}
+                      <div>
+                        <label className="block text-white mb-1">Title</label>
+                        <input
+                          className="w-full p-2 rounded bg-gray-700 text-white"
+                          type="text"
+                          value={newChallenge.title}
+                          onChange={(e) => setNewChallenge({ 
+                            ...newChallenge, 
+                            title: e.target.value 
+                          })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-1">Description</label>
+                        <input
+                          className="w-full p-2 rounded bg-gray-700 text-white"
+                          type="text"
+                          value={newChallenge.description}
+                          onChange={(e) => setNewChallenge({ 
+                            ...newChallenge, 
+                            description: e.target.value 
+                          })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-1">Reward</label>
+                        <input
+                          className="w-full p-2 rounded bg-gray-700 text-white"
+                          type="number"
+                          value={newChallenge.reward}
+                          onChange={(e) => setNewChallenge({ 
+                            ...newChallenge, 
+                            reward: parseFloat(e.target.value) 
+                          })}
+                          required
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
+                      >
+                        Add Challenge
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="space-y-4">
+                    {user.challenges.map(challenge => (
+                      <div 
+                        key={challenge.id} 
+                        className="bg-[#414141] border-2 border-[#2cd3a7]/20 rounded-lg p-5 hover:shadow-sm transition"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-semibold text-white text-xl">{challenge.title}</h4>
+                            <p className="text-gray-300 text-sm">{challenge.description}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-white font-bold text-lg">
+                              ${challenge.reward} Reward
+                            </span>
+                            {renderProgressBar(challenge.progress)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </motion.div>
             )}
 
             {activeTab === 'transactions' && (
-              <div>
-                <h2 className="text-3xl font-bold text-white mb-6">Transactions</h2>
-                <div className="bg-[#414141] rounded-lg">
-                  <table className="w-full text-white">
-                    <thead className="border-b border-[#2cd3a7]/20">
-                      <tr>
-                        <th className="p-4 text-left">Date</th>
-                        <th className="p-4 text-left">Description</th>
-                        <th className="p-4 text-left">Category</th>
-                        <th className="p-4 text-right">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {user.transactions.map(transaction => (
-                        <tr 
-                          key={transaction.id} 
-                          className="hover:bg-[#2cd3a7]/10 transition"
-                        >
-                          <td className="p-4">{transaction.date}</td>
-                          <td className="p-4">{transaction.description}</td>
-                          <td className="p-4">{transaction.category}</td>
-                          <td 
-                            className={`p-4 text-right ${
-                              transaction.type === 'income' 
-                                ? 'text-[#55f86b]' 
-                                : 'text-[#ff6b6b]'
-                            }`}
-                          >
-                            ${transaction.amount.toFixed(2)}
-                          </td>
+              <motion.div variants={pageVariants}>
+                <motion.div variants={pageVariants}>
+                  <h2 className="text-3xl font-bold text-white mb-6">Transactions</h2>
+                  <div className="bg-[#414141] rounded-lg">
+                    <table className="w-full text-white">
+                      <thead className="border-b border-[#2cd3a7]/20">
+                        <tr>
+                          <th className="p-4 text-left">Date</th>
+                          <th className="p-4 text-left">Description</th>
+                          <th className="p-4 text-left">Category</th>
+                          <th className="p-4 text-right">Amount</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                      </thead>
+                      <tbody>
+                        {user.transactions.map(transaction => (
+                          <tr 
+                            key={transaction.id} 
+                            className="hover:bg-[#2cd3a7]/10 transition"
+                          >
+                            <td className="p-4">{transaction.date}</td>
+                            <td className="p-4">{transaction.description}</td>
+                            <td className="p-4">{transaction.category}</td>
+                            <td 
+                              className={`p-4 text-right ${
+                                transaction.type === 'income' 
+                                  ? 'text-[#55f86b]' 
+                                  : 'text-[#ff6b6b]'
+                              }`}
+                            >
+                              ${transaction.amount.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              </motion.div>
             )}
 
             {activeTab === 'moneebot' && (
