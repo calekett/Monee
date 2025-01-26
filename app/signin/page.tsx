@@ -44,6 +44,15 @@ export default function SignInPage() {
             Sign In
           </button>
         </form>
+        {/* Add Create Account link */}
+        <div className="mt-4 text-center">
+          <a
+            href="#"
+            className="text-[#2cd3a7] hover:underline"
+          >
+            Create Account
+          </a>
+        </div>
       </div>
     </div>
   );
