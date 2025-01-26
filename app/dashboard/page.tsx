@@ -36,6 +36,103 @@ interface User {
   challenges: Challenge[];
   transactions: Transaction[];
 }
+interface Message {
+  name: string;
+  message: string;
+}
+
+const Chatbox: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage: Message = { name: "User", message: input };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        body: JSON.stringify({ message: input }),
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      const botMessage: Message = { name: "Sam", message: data.answer };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Error fetching response:", error);
+    }
+
+    setInput(""); // Clear the input field
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <div className="container h-full w-full bg-gray-900 flex flex-col">
+      {/* Chatbox Support Section */}
+      <div className="chatbox__support flex flex-col h-full bg-gray-800 rounded-lg p-4">
+        {/* Header */}
+        <div className="chatbox__header flex items-center mb-4 border-b border-gray-700 pb-2">
+          <div className="chatbox__image--header mr-3">
+            <img
+              src="./dollar_icon2.png"
+              alt="MoneeBot"
+              className="w-12 h-12 rounded"
+            />
+          </div>
+          <div className="chatbox__content--header">
+            <h4 className="chatbox__heading--header text-white font-bold">MoneeBot</h4>
+            <p className="chatbox__description--header text-gray-400">
+              Hi. How can I help you with your finances?
+            </p>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="chatbox__messages flex-grow overflow-y-auto bg-gray-700 rounded-lg p-4 text-white">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`messages__item ${
+                msg.name === "Sam" ? "messages__item--visitor" : "messages__item--operator"
+              }`}
+            >
+              {msg.message}
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="chatbox__footer flex items-center mt-4">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyUp={handleKeyPress}
+            placeholder="Write a message..."
+            className="flex-grow p-2 rounded-lg bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="chatbox__send--footer send__button bg-[#2cd3a7] text-white px-4 py-2 rounded-lg"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const initialUser: User = {
   name: 'Cale Kettner',
@@ -612,48 +709,8 @@ const FinancialFitnessCoach: React.FC = () => {
               </motion.div>
             )}
 
-            {activeTab === 'moneebot' && (
-              <motion.div variants={pageVariants}>
-                <motion.h2 
-                  variants={pageVariants}
-                  className="text-3xl font-bold text-white mb-6"
-                >
-                  Moneebot
-                </motion.h2>
-                <motion.p variants={pageVariants} className="text-white mb-4">
-                  Get personalized financial advice from moneebot.
-                </motion.p>
+      {activeTab === 'moneebot' && <Chatbox />}
 
-                {/* ADDED: Chatbot UI */}
-                <div className="bg-[#414141] p-4 rounded-lg mb-6 space-y-4">
-                  <div className="overflow-y-auto max-h-72 mb-4 pr-2">
-                    {chatMessages.map((msg, index) => (
-                      <div key={index} className="mb-2">
-                        <strong className={msg.role === 'user' ? 'text-[#55f86b]' : 'text-[#2cd3a7]'}>
-                          {msg.role === 'user' ? user.name : 'Moneebot'}:
-                        </strong>{" "}
-                        <span className="text-white">{msg.content}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <form onSubmit={handleChatSubmit} className="flex space-x-2">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Ask Moneebot something..."
-                      className="flex-grow p-2 rounded bg-gray-700 text-white focus:outline-none"
-                    />
-                    <button 
-                      type="submit" 
-                      className="bg-[#2cd3a7] text-black px-4 py-2 rounded-lg hover:opacity-90"
-                    >
-                      Send
-                    </button>
-                  </form>
-                </div>
-              </motion.div>
-            )}
 
             {activeTab === 'redeem' && (
               <motion.div variants={pageVariants}>
